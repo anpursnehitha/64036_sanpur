@@ -1,0 +1,64 @@
+---
+title: "Assignment 1"
+author: "Snehitha Anpur"
+date: "2022-10-01"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+ 
+Question 1
+
+```{r}
+#Installing the ISLR package
+#install.packages("ISLR")
+library(ISLR)  #Loading the ISLR package
+
+```
+Question 2
+
+```{r}
+
+#Descriptive Statistics of Carseats
+summary(Carseats)
+numofrows= nrow(Carseats)
+#Number of rows:
+print(paste("Number of rows/observations:", numofrows))
+
+```
+Question 3
+
+```{r}
+
+#Maximum value of Advertising attribute
+maxvalueofadv= max(Carseats$Advertising)
+print(paste("Maximum value of Advertising is", maxvalueofadv))
+
+```
+Question 4
+
+```{r}
+
+#IQR value of Price attribute
+priceIQR=IQR(Carseats$Price)
+
+print(paste("IQR value of Price is", priceIQR))
+
+```
+Question 5
+```{r}
+
+#Scatter plot between sales and price attribute
+plot(Carseats$Sales,Carseats$Price,col="blue")
+
+#calculating the correlation between sales and price attributes
+Corvalue = cor(Carseats$Sales,Carseats$Price, method=c("pearson", "kendall", "spearman"))
+
+print(paste("Correlation value pf Sales and Price is", Corvalue))
+
+```
+From the plot we see that Sales and Price are inversely proportional. Here the correlation shows negative sign which means as the Sales increases price decreases.
+
+
+
+
