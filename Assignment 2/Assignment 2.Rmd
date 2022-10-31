@@ -1,0 +1,257 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+ ---
+title: "Assignment 2"
+author: "Snehitha Anpur"
+date: "2022-10-28"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+library(dplyr)
+
+OnlineRetail=read.csv("D:\\MSBA\\rTutorial\\Rtutorial\\Online_Retail.csv")
+
+```
+Question 1:
+
+Showing the Count of transactions by country and the percentage of transactions by country greater that 1
+```{r}
+
+Countries_count = OnlineRetail %>% group_by(Country) %>% count(Country)
+
+Countries_pct = OnlineRetail %>% group_by(Country) %>% summarise(percent = 100* n()/nrow(OnlineRetail))
+
+Fltrd_Cntry_pct = filter(Countries_pct, percent>1)
+
+#Countries Count
+Countries_count
+
+#Percentage of transactions greater than 1
+Fltrd_Cntry_pct
+
+```
+Question 2:
+
+```{r}
+
+TransactionValue = (OnlineRetail$Quantity * OnlineRetail$UnitPrice)
+
+#Adding the TransactionValue column to the OnlineRetail table
+Online_Retail = cbind(OnlineRetail,TransactionValue)
+
+```
+Question 3:
+
+```{r}
+
+Trans_sum = Online_Retail %>% group_by(Country) %>% summarise(sum=sum(TransactionValue))
+
+Fltrd_Trans_sum = filter(Trans_sum,Trans_sum$sum>130000)
+
+#Sum of TransactionValue for each countries
+Trans_sum
+
+#Filtering the transactions greater than 130000
+Fltrd_Trans_sum
+
+
+
+```
+Question 4:
+
+```{r}
+
+Temp=strptime(Online_Retail$InvoiceDate,format='%m/%d/%Y %H:%M',tz='GMT') 
+
+head(Temp)
+
+Online_Retail$New_Invoice_Date <- as.Date(Temp)
+
+Online_Retail$Invoice_Day_Week= weekdays(Online_Retail$New_Invoice_Date)
+
+Online_Retail$New_Invoice_Hour = as.numeric(format(Temp, "%H")) 
+
+Online_Retail$New_Invoice_Month = as.numeric(format(Temp, "%m")) 
+
+Online_Retail$New_Invoice_Date[20000]- Online_Retail$New_Invoice_Date[10]
+
+```
+
+
+```{r}
+# a:
+
+#Percentage of number of transactions based on week days
+Week_days_count = Online_Retail %>% group_by(Invoice_Day_Week) %>% summarise(percent = 100* n()/nrow(Online_Retail))
+
+Week_days_count
+
+# b:
+#percentage of TransactionsValue 
+
+Week_days_sum = Online_Retail %>% group_by(Invoice_Day_Week) %>% summarise(sum=sum(TransactionValue))
+
+#Calculating the percentage for TransactionValue by week days   
+Week_quan_pct =  100*(Week_days_sum$sum)/sum(Week_days_sum$sum)
+
+#replacing the sum with the percentage value
+Week_days_sum$sum = Week_quan_pct
+
+Week_days_sum
+
+```
+
+
+```{r}
+#c
+#Percentage of TransactionsValue by month of the year
+
+Invoice_month_sum = Online_Retail %>% group_by(New_Invoice_Month) %>% summarise(sum=sum(TransactionValue)) 
+    
+Month_quan_pct =  100*(Invoice_month_sum$sum)/sum(Invoice_month_sum$sum)
+
+Invoice_month_sum$sum = Month_quan_pct
+
+Invoice_month_sum
+
+```
+```{r}
+#d
+
+#Filtering the Australia's transactions based on New_Invoice_date
+
+Australia_trans = Online_Retail %>% filter(Country == "Australia") %>% group_by(New_Invoice_Date) %>% summarise(total=n())
+
+#Finding the date which has maximum number of transactions
+
+Max_trans_date =  Australia_trans[which.max(Australia_trans$total),]
+
+Max_trans_date
+
+#e
+
+#Filtering the transactions for the hours between 7:00 to 20:00
+
+Sum_quan = Online_Retail %>% filter( New_Invoice_Hour >=7) %>% group_by(New_Invoice_Hour) %>% summarise(sum_val= sum(Quantity))
+
+#install.packages("zoo")
+library(zoo)
+#Adding the two consecutive rows 
+Consec_sum=rollapply(Sum_quan$sum_val,2,sum)
+
+#Creating the maintainance column
+maintainance=c(7:19)
+
+#creating the dataframe for the maintainance and Consec_sum
+Main_tab=data.frame(maintainance,Consec_sum)
+
+#checking the minimum value of Consec_sum and the hour where they can start maintainance
+maintainance_hour=Main_tab[which.min(Main_tab$Consec_sum),]
+
+maintainance_hour
+
+# From the above result,At 19th hour they can start maintainance
+
+```
+
+
+Question 5:
+```{r}
+
+Trans_val_germny = filter(Online_Retail, Online_Retail$Country == "Germany")
+
+#Plotting graph between transaction value with the frequency for Germany country
+
+hist(Trans_val_germny$TransactionValue)
+
+```
+Question 6:
+
+```{r}
+#Removing the NA values of CustomerID Column
+NA_OnlineRetail=Online_Retail[!is.na(Online_Retail$CustomerID),]
+
+#Number of transactions with respect to CustomerID
+Count_transactions = NA_OnlineRetail %>% group_by(CustomerID) %>% summarise(count=n())
+
+#printing the row which has max count of transactions
+Max_Count_transactions= Count_transactions[which.max(Count_transactions$count),]
+
+# Adding the transaction value with respect to Customer ID
+Sum_transactions = NA_OnlineRetail %>% group_by(CustomerID) %>% summarise(Numoftransactions=(sum(TransactionValue,na.rm = T)))
+
+#printing the row which has max sum of transaction value
+Max_Sum_transactions= Sum_transactions[which.max(Sum_transactions$Numoftransactions),]
+
+Max_Count_transactions
+Max_Sum_transactions
+```
+Question 7:
+
+```{r}
+
+#Percentage of NA's for each column
+
+NA_per = colMeans(is.na(Online_Retail))*100
+
+NA_per
+
+```
+Question 8:
+
+```{r}
+
+#Number of Transactions with missing customer ID
+
+null_Customer = Online_Retail[is.na(Online_Retail$CustomerID),]
+
+# Segregating the missing CustomerID based on countries
+
+table(null_Customer$Country)
+
+```
+
+Question 10:
+
+```{r}
+
+# Filtering the dataset for french customers
+
+French_cstmrs = filter(Online_Retail,Country=="France" )
+
+#Returnrate for the french customers
+
+Return_rate = nrow(filter(French_cstmrs,Quantity<1))/nrow(French_cstmrs)
+
+Return_rate
+
+```
+Question 11:
+
+```{r}
+
+#revenue of each product
+Prd_revenue= Online_Retail %>% group_by(StockCode) %>% summarise(Sum_trnsvalue = sum(TransactionValue))
+
+#Selecting the product with highest revenue
+Prd_revenue[which.max(Prd_revenue$Sum_trnsvalue),]
+
+```
+Question 12:
+
+```{r}
+
+#Number of unique customers
+length(unique(Online_Retail$CustomerID))
+
+```
+
